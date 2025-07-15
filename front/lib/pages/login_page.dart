@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pokemon_list_page.dart';
 
@@ -225,6 +226,11 @@ class _LoginPageState extends State<LoginPage> {
 
     // Simulate API call delay
     await Future.delayed(const Duration(seconds: 2));
+
+    // Sauvegarder l'état de connexion
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', _emailController.text);
+    await prefs.setString('login_date', DateTime.now().toIso8601String());
 
     // TODO: Implement actual authentication with your API
     // For now, we'll just navigate to the Pokemon list
