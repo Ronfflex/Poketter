@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../pages/pokemon_detail_page.dart';
+import '../pages/profile_page.dart';
+import '../pages/login_page.dart';
+import '../pages/favorites_page.dart';
+import '../pages/advanced_search_page.dart';
+import '../pages/stats_page.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_card.dart';
 
@@ -15,10 +21,12 @@ class PokemonListPage extends StatefulWidget {
 class _PokemonListPageState extends State<PokemonListPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  bool _isUserLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<PokemonProvider>(context, listen: false);
       provider.loadPokemonList();
@@ -36,6 +44,52 @@ class _PokemonListPageState extends State<PokemonListPage> {
         }
       }
     });
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    setState(() {
+      _isUserLoggedIn = username != null && username.isNotEmpty;
+    });
+  }
+
+  void _navigateToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfilePage()),
+    );
+  }
+
+  void _navigateToLogin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    ).then((_) {
+      // Vérifier le statut de connexion après retour de la page de login
+      _checkLoginStatus();
+    });
+  }
+
+  void _navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FavoritesPage()),
+    );
+  }
+
+  void _navigateToAdvancedSearch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AdvancedSearchPage()),
+    );
+  }
+
+  void _navigateToStats() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const StatsPage()),
+    );
   }
 
   @override
@@ -61,6 +115,78 @@ class _PokemonListPageState extends State<PokemonListPage> {
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
+          ),
+          // Bouton de profil/connexion avec menu
+          PopupMenuButton<String>(
+            icon: Icon(_isUserLoggedIn ? Icons.person : Icons.login),
+            onSelected: (String value) {
+              switch (value) {
+                case 'profile':
+                  _navigateToProfile();
+                  break;
+                case 'login':
+                  _navigateToLogin();
+                  break;
+                case 'favorites':
+                  _navigateToFavorites();
+                  break;
+                case 'search':
+                  _navigateToAdvancedSearch();
+                  break;
+                case 'stats':
+                  _navigateToStats();
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              if (_isUserLoggedIn) {
+                return [
+                  const PopupMenuItem(
+                    value: 'profile',
+                    child: ListTile(
+                      leading: Icon(Icons.person),
+                      title: Text('Mon profil'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'favorites',
+                    child: ListTile(
+                      leading: Icon(Icons.favorite),
+                      title: Text('Mes favoris'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'search',
+                    child: ListTile(
+                      leading: Icon(Icons.search),
+                      title: Text('Recherche avancée'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'stats',
+                    child: ListTile(
+                      leading: Icon(Icons.bar_chart),
+                      title: Text('Statistiques'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ];
+              } else {
+                return [
+                  const PopupMenuItem(
+                    value: 'login',
+                    child: ListTile(
+                      leading: Icon(Icons.login),
+                      title: Text('Se connecter'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ];
+              }
+            },
           ),
         ],
       ),
