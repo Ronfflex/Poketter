@@ -141,16 +141,15 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 8),
           Text(
             user.email,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: user.role == 'ADMIN' ? Colors.orange.shade100 : Colors.blue.shade100,
+              color: user.role == 'ADMIN'
+                  ? Colors.orange.shade100
+                  : Colors.blue.shade100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -158,7 +157,9 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: user.role == 'ADMIN' ? Colors.orange.shade800 : Colors.blue.shade800,
+                color: user.role == 'ADMIN'
+                    ? Colors.orange.shade800
+                    : Colors.blue.shade800,
               ),
             ),
           ),
@@ -242,7 +243,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (value == null || value.isEmpty) {
                   return 'Veuillez entrer une adresse email';
                 }
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                if (!RegExp(
+                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                ).hasMatch(value)) {
                   return 'Veuillez entrer une adresse email valide';
                 }
                 return null;
@@ -389,10 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -499,7 +499,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final result = await authService.updateProfile(
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
-      password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+      password: _passwordController.text.isNotEmpty
+          ? _passwordController.text
+          : null,
     );
 
     if (mounted) {
@@ -510,7 +512,9 @@ class _ProfilePageState extends State<ProfilePage> {
         });
         _showSuccessDialog('Profil mis à jour avec succès');
       } else {
-        _showErrorDialog(result.errorMessage ?? 'Erreur lors de la mise à jour');
+        _showErrorDialog(
+          result.errorMessage ?? 'Erreur lors de la mise à jour',
+        );
       }
     }
   }
@@ -573,7 +577,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _logout() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     await authService.logout();
-    
+
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),

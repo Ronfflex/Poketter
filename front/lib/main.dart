@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'pages/splash_screen.dart';
 import 'providers/pokemon_provider.dart';
+import 'services/auth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +15,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => PokemonProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => PokemonProvider()),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+      ],
       child: MaterialApp(
         title: 'Poketter',
         debugShowCheckedModeBanner: false,

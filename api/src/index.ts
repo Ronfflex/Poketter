@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import cors from 'cors';
+import { config } from 'dotenv';
+
+// Charger les variables d'environnement
+config();
 
 import authRouter from './routes/auth.router';
 import userRouter from './routes/user.router';
