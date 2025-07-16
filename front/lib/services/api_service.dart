@@ -188,6 +188,38 @@ class ApiService {
     final token = await _getAuthToken();
     return token != null;
   }
+
+  // Méthodes pour les likes
+  static Future<ApiResponse<Like>> likePokemon(int pokemonId) async {
+    try {
+      final headers = await _getAuthHeaders();
+      final profile = await getProfile();
+      
+      if (!profile.success || profile.data == null) {
+        return ApiResponse.error(message: 'Utilisateur non connecté');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/like'),
+        headers: headers,
+        body: jsonEncode({
+          'pokemonId': pokemonId,
+          'user': {
+            'id': profile.data!.id,
+          },
+        }),
+      );
+
+      return await _handleResponse<Like>(
+        response,
+        (data) => Like.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Erreur lors de l\'ajout du like',
+      );
+    }
+  }
 }
 
 // Modèles de données
@@ -302,6 +334,32 @@ class UpdateUserResponse {
     return UpdateUserResponse(
       message: json['message'],
       user: User.fromJson(json['user']),
+    );
+  }
+}
+
+class Like {
+  final int id;
+  final int pokemonId;
+  final int userId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Like({
+    required this.id,
+    required this.pokemonId,
+    required this.userId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Like.fromJson(Map<String, dynamic> json) {
+    return Like(
+      id: json['id'],
+      pokemonId: json['pokemonId'],
+      userId: json['userId'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 }

@@ -2,17 +2,25 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/pokemon.dart';
+import '../services/api_service.dart';
 import '../utils/pokemon_colors.dart';
 
-class PokemonDetailPage extends StatelessWidget {
+class PokemonDetailPage extends StatefulWidget {
   final Pokemon pokemon;
 
   const PokemonDetailPage({super.key, required this.pokemon});
 
   @override
+  State<PokemonDetailPage> createState() => _PokemonDetailPageState();
+}
+
+class _PokemonDetailPageState extends State<PokemonDetailPage> {
+  bool _isLiking = false;
+
+  @override
   Widget build(BuildContext context) {
-    final primaryColor = pokemon.types.isNotEmpty
-        ? PokemonTypeColors.getTypeColor(pokemon.types.first)
+    final primaryColor = widget.pokemon.types.isNotEmpty
+        ? PokemonTypeColors.getTypeColor(widget.pokemon.types.first)
         : Colors.grey;
 
     return Scaffold(
@@ -20,7 +28,7 @@ class PokemonDetailPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        title: Text(_capitalize(pokemon.name)),
+        title: Text(_capitalize(widget.pokemon.name)),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -53,9 +61,9 @@ class PokemonDetailPage extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
           Hero(
-            tag: 'pokemon-${pokemon.id}',
+            tag: 'pokemon-${widget.pokemon.id}',
             child: CachedNetworkImage(
-              imageUrl: pokemon.imageUrl,
+              imageUrl: widget.pokemon.imageUrl,
               height: 200,
               placeholder: (context, url) => const CircularProgressIndicator(),
               errorWidget: (context, url, error) => Icon(
@@ -67,7 +75,7 @@ class PokemonDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '#${pokemon.id.toString().padLeft(3, '0')}',
+            '#${widget.pokemon.id.toString().padLeft(3, '0')}',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -75,18 +83,25 @@ class PokemonDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            _capitalize(pokemon.name),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _capitalize(widget.pokemon.name),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 16),
+              _buildLikeButton(),
+            ],
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: pokemon.types
+            children: widget.pokemon.types
                 .map((type) => _buildTypeChip(type))
                 .toList(),
           ),
@@ -148,14 +163,14 @@ class PokemonDetailPage extends StatelessWidget {
               Expanded(
                 child: _buildInfoItem(
                   'Height',
-                  '${(pokemon.height / 10).toStringAsFixed(1)} m',
+                  '${(widget.pokemon.height / 10).toStringAsFixed(1)} m',
                   Icons.height,
                 ),
               ),
               Expanded(
                 child: _buildInfoItem(
                   'Weight',
-                  '${(pokemon.weight / 10).toStringAsFixed(1)} kg',
+                  '${(widget.pokemon.weight / 10).toStringAsFixed(1)} kg',
                   Icons.fitness_center,
                 ),
               ),
@@ -174,7 +189,7 @@ class PokemonDetailPage extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: pokemon.abilities
+            children: widget.pokemon.abilities
                 .map(
                   (ability) => Chip(
                     label: Text(_capitalize(ability.replaceAll('-', ' '))),
@@ -245,7 +260,7 @@ class PokemonDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...pokemon.stats.map((stat) => _buildStatBar(stat)),
+          ...widget.pokemon.stats.map((stat) => _buildStatBar(stat)),
         ],
       ),
     );
@@ -342,5 +357,79 @@ class PokemonDetailPage extends StatelessWidget {
           return word[0].toUpperCase() + word.substring(1).toLowerCase();
         })
         .join(' ');
+  }
+
+  Widget _buildLikeButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: IconButton(
+        onPressed: _isLiking ? null : _likePokemon,
+        icon: _isLiking
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Icon(
+                Icons.favorite_border,
+                color: Colors.white,
+                size: 28,
+              ),
+      ),
+    );
+  }
+
+  Future<void> _likePokemon() async {
+    setState(() {
+      _isLiking = true;
+    });
+
+    try {
+      final result = await ApiService.likePokemon(widget.pokemon.id);
+      
+      if (result.success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${_capitalize(widget.pokemon.name)} ajouté aux favoris!'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message ?? 'Erreur lors de l\'ajout aux favoris'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur de connexion'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLiking = false;
+        });
+      }
+    }
   }
 }
