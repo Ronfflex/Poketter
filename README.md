@@ -52,24 +52,6 @@ C'est tout ! 🎉 L'application se lance automatiquement avec :
 ./stop.sh --clean
 ```
 
-### Gestion de la base de données
-```bash
-# Exécuter les migrations
-./db.sh migrate
-
-# Créer une nouvelle migration
-./db.sh create
-
-# Réinitialiser la base de données
-./db.sh reset
-
-# Voir le statut des services
-./db.sh status
-
-# Connexion PostgreSQL
-./db.sh psql
-```
-
 ## 🏗️ Architecture
 
 ### Structure du projet
@@ -90,8 +72,7 @@ Poketter/
 │   │   └── widgets/       # Composants réutilisables
 │   └── pubspec.yaml       # Dépendances Flutter
 ├── start.sh               # Script de démarrage
-├── stop.sh                # Script d'arrêt
-└── db.sh                  # Gestion de la base de données
+└── stop.sh                # Script d'arrêt
 ```
 
 ### Stack technique
@@ -177,8 +158,7 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 En cas de problème :
 1. Vérifier les logs avec `docker compose logs` ou `docker-compose logs`
 2. Redémarrer avec `./stop.sh && ./start.sh`
-3. Réinitialiser la base de données avec `./db.sh reset`
-4. Ouvrir une issue sur GitHub
+3. Ouvrir une issue sur GitHub
 
 ---
 
