@@ -220,6 +220,35 @@ class ApiService {
     }
   }
 
+  static Future<ApiResponse<List<View>>> getViews() async {
+    try {
+      final headers = await _getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/view'),
+        headers: headers,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final views = data.map((json) => View.fromJson(json)).toList();
+        return ApiResponse.success(
+          data: views,
+          statusCode: response.statusCode,
+        );
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return ApiResponse.error(
+          message: errorData['error'] ?? 'Une erreur est survenue',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Erreur lors de la récupération des vues',
+      );
+    }
+  }
+
   static Future<ApiResponse<Like>> likePokemon(int pokemonId) async {
     try {
       final headers = await _getAuthHeaders();
@@ -267,6 +296,26 @@ class ApiService {
     } catch (e) {
       return ApiResponse.error(
         message: 'Erreur lors de la suppression du like',
+      );
+    }
+  }
+
+  static Future<ApiResponse<View>> createView(int pokemonId) async {
+    try {
+      final headers = await _getAuthHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/view'),
+        headers: headers,
+        body: jsonEncode({'pokemonId': pokemonId}),
+      );
+
+      return await _handleResponse<View>(
+        response,
+        (data) => View.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Erreur lors de l\'enregistrement de la vue',
       );
     }
   }
@@ -405,6 +454,32 @@ class Like {
 
   factory Like.fromJson(Map<String, dynamic> json) {
     return Like(
+      id: json['id'],
+      pokemonId: json['pokemonId'],
+      userId: json['userId'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+    );
+  }
+}
+
+class View {
+  final int id;
+  final int pokemonId;
+  final int userId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  View({
+    required this.id,
+    required this.pokemonId,
+    required this.userId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory View.fromJson(Map<String, dynamic> json) {
+    return View(
       id: json['id'],
       pokemonId: json['pokemonId'],
       userId: json['userId'],

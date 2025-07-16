@@ -3,9 +3,9 @@ import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const vueRouter = Router();
+const viewRouter = Router();
 
-vueRouter.post("/", async (req, res) => {
+viewRouter.post("/", async (req, res) => {
   try {
     const bodySchema = z.object({
       pokemonId: z.number(),
@@ -17,29 +17,29 @@ vueRouter.post("/", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const vue = await prisma.vue.create({
+    const view = await prisma.vue.create({
       data: {
         pokemonId,
         userId: user.id,
       },
     });
 
-    res.status(201).json(vue);
+    res.status(201).json(view);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-vueRouter.get("/", async (req, res) => {
+viewRouter.get("/", async (req, res) => {
   try {
     const userId = req.query.userId ? Number(req.query.userId) : undefined;
     const where = userId ? { userId } : {};
 
-    const vues = await prisma.vue.findMany({ where });
-    res.json(vues);
+    const views = await prisma.vue.findMany({ where });
+    res.json(views);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-export default vueRouter;
+export default viewRouter;

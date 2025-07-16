@@ -19,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
   int _favoritesCount = 0;
+  int _viewedPokemonCount = 0;
   bool _isLoadingStats = false;
 
   @override
@@ -34,10 +35,24 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
+      // Get liked Pokemon from API
       final likesResult = await ApiService.getLikes();
       if (likesResult.success && likesResult.data != null) {
         setState(() {
           _favoritesCount = likesResult.data!.length;
+        });
+      }
+
+      // Get viewed Pokemon from API
+      final viewsResult = await ApiService.getViews();
+      if (viewsResult.success && viewsResult.data != null) {
+        // Count unique Pokemon IDs to get the number of unique Pokemon viewed
+        final uniquePokemonIds = <int>{};
+        for (final view in viewsResult.data!) {
+          uniquePokemonIds.add(view.pokemonId);
+        }
+        setState(() {
+          _viewedPokemonCount = uniquePokemonIds.length;
         });
       }
     } catch (e) {
@@ -385,7 +400,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: _buildStatItem(
                   icon: Icons.visibility,
                   label: 'Pokémon vus',
-                  value: '...', // TODO: Implémenter le comptage
+                  value: _isLoadingStats
+                      ? '...'
+                      : _viewedPokemonCount.toString(),
                   color: Colors.blue,
                 ),
               ),

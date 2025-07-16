@@ -23,6 +23,18 @@ class _PokemonDetailPageState extends State<PokemonDetailPage> {
   void initState() {
     super.initState();
     _checkLikeState();
+    _recordView();
+  }
+
+  Future<void> _recordView() async {
+    try {
+      await ApiService.createView(widget.pokemon.id);
+      // We don't need to show any feedback for view recording
+      // as it's a background operation
+    } catch (e) {
+      // Silently handle errors to not disrupt user experience
+      print('Error recording view: $e');
+    }
   }
 
   Future<void> _checkLikeState() async {
