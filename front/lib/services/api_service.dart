@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -190,11 +191,40 @@ class ApiService {
   }
 
   // Méthodes pour les likes
+  static Future<ApiResponse<List<Like>>> getLikes() async {
+    try {
+      final headers = await _getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/like'),
+        headers: headers,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final likes = data.map((json) => Like.fromJson(json)).toList();
+        return ApiResponse.success(
+          data: likes,
+          statusCode: response.statusCode,
+        );
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return ApiResponse.error(
+          message: errorData['error'] ?? 'Une erreur est survenue',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Erreur lors de la récupération des likes',
+      );
+    }
+  }
+
   static Future<ApiResponse<Like>> likePokemon(int pokemonId) async {
     try {
       final headers = await _getAuthHeaders();
       final profile = await getProfile();
-      
+
       if (!profile.success || profile.data == null) {
         return ApiResponse.error(message: 'Utilisateur non connecté');
       }
@@ -202,12 +232,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/like'),
         headers: headers,
-        body: jsonEncode({
-          'pokemonId': pokemonId,
-          'user': {
-            'id': profile.data!.id,
-          },
-        }),
+        body: jsonEncode({'pokemonId': pokemonId}),
       );
 
       return await _handleResponse<Like>(
@@ -215,8 +240,33 @@ class ApiService {
         (data) => Like.fromJson(data),
       );
     } catch (e) {
+      return ApiResponse.error(message: 'Erreur lors de l\'ajout du like');
+    }
+  }
+
+  static Future<ApiResponse<Map<String, dynamic>>> unlikePokemon(
+    int pokemonId,
+  ) async {
+    try {
+      final headers = await _getAuthHeaders();
+      final response = await http.delete(
+        Uri.parse('$baseUrl/like/$pokemonId'),
+        headers: headers,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        return ApiResponse.success(data: data, statusCode: response.statusCode);
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return ApiResponse.error(
+          message: errorData['error'] ?? 'Une erreur est survenue',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
       return ApiResponse.error(
-        message: 'Erreur lors de l\'ajout du like',
+        message: 'Erreur lors de la suppression du like',
       );
     }
   }

@@ -16,6 +16,43 @@ class PokemonDetailPage extends StatefulWidget {
 
 class _PokemonDetailPageState extends State<PokemonDetailPage> {
   bool _isLiking = false;
+  bool _isLiked = false;
+  bool _isLoadingLikeState = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLikeState();
+  }
+
+  Future<void> _checkLikeState() async {
+    try {
+      final result = await ApiService.getLikes();
+      if (result.success && result.data != null) {
+        final isLiked = result.data!.any(
+          (like) => like.pokemonId == widget.pokemon.id,
+        );
+        if (mounted) {
+          setState(() {
+            _isLiked = isLiked;
+            _isLoadingLikeState = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingLikeState = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingLikeState = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -366,8 +403,8 @@ class _PokemonDetailPageState extends State<PokemonDetailPage> {
         borderRadius: BorderRadius.circular(30),
       ),
       child: IconButton(
-        onPressed: _isLiking ? null : _likePokemon,
-        icon: _isLiking
+        onPressed: (_isLiking || _isLoadingLikeState) ? null : _toggleLike,
+        icon: _isLoadingLikeState
             ? const SizedBox(
                 width: 20,
                 height: 20,
@@ -376,42 +413,93 @@ class _PokemonDetailPageState extends State<PokemonDetailPage> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Icon(
-                Icons.favorite_border,
-                color: Colors.white,
+            : _isLiking
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Icon(
+                _isLiked ? Icons.favorite : Icons.favorite_border,
+                color: _isLiked ? Colors.red : Colors.white,
                 size: 28,
               ),
       ),
     );
   }
 
-  Future<void> _likePokemon() async {
+  Future<void> _toggleLike() async {
     setState(() {
       _isLiking = true;
     });
 
     try {
-      final result = await ApiService.likePokemon(widget.pokemon.id);
-      
-      if (result.success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${_capitalize(widget.pokemon.name)} ajouté aux favoris!'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+      if (_isLiked) {
+        // Unlike the pokemon
+        final result = await ApiService.unlikePokemon(widget.pokemon.id);
+
+        if (result.success) {
+          if (mounted) {
+            setState(() {
+              _isLiked = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${_capitalize(widget.pokemon.name)} retiré des favoris!',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  result.message ?? 'Erreur lors de la suppression des favoris',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message ?? 'Erreur lors de l\'ajout aux favoris'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+        // Like the pokemon
+        final result = await ApiService.likePokemon(widget.pokemon.id);
+
+        if (result.success) {
+          if (mounted) {
+            setState(() {
+              _isLiked = true;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${_capitalize(widget.pokemon.name)} ajouté aux favoris!',
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  result.message ?? 'Erreur lors de l\'ajout aux favoris',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         }
       }
     } catch (e) {

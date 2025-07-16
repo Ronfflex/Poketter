@@ -43,7 +43,7 @@ likeRouter.get("/", async (req, res) => {
 });
 
 // DELETE /like/:pokemonId - Remove a like for the authenticated user
-likeRouter.delete("/like/:pokemonId", async (req, res) => {
+likeRouter.delete("/:pokemonId", async (req, res) => {
   try {
     const pokemonId = Number(req.params.pokemonId);
     const user = req.body.user;
