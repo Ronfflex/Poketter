@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
 
@@ -16,11 +18,35 @@ class _ProfilePageState extends State<ProfilePage> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
+  int _favoritesCount = 0;
+  bool _isLoadingStats = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    try {
+      final likesResult = await ApiService.getLikes();
+      if (likesResult.success && likesResult.data != null) {
+        setState(() {
+          _favoritesCount = likesResult.data!.length;
+        });
+      }
+    } catch (e) {
+      print('Error loading stats: $e');
+    } finally {
+      setState(() {
+        _isLoadingStats = false;
+      });
+    }
   }
 
   @override
@@ -52,6 +78,20 @@ class _ProfilePageState extends State<ProfilePage> {
           IconButton(
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
             onPressed: _isEditing ? _saveProfile : _toggleEditing,
+          ),
+          IconButton(
+            icon: _isLoadingStats
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.refresh),
+            onPressed: _isLoadingStats ? null : _loadStats,
+            tooltip: 'Actualiser les statistiques',
           ),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -141,16 +181,15 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 8),
           Text(
             user.email,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: user.role == 'ADMIN' ? Colors.orange.shade100 : Colors.blue.shade100,
+              color: user.role == 'ADMIN'
+                  ? Colors.orange.shade100
+                  : Colors.blue.shade100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -158,7 +197,9 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: user.role == 'ADMIN' ? Colors.orange.shade800 : Colors.blue.shade800,
+                color: user.role == 'ADMIN'
+                    ? Colors.orange.shade800
+                    : Colors.blue.shade800,
               ),
             ),
           ),
@@ -242,7 +283,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (value == null || value.isEmpty) {
                   return 'Veuillez entrer une adresse email';
                 }
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                if (!RegExp(
+                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                ).hasMatch(value)) {
                   return 'Veuillez entrer une adresse email valide';
                 }
                 return null;
@@ -342,7 +385,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: _buildStatItem(
                   icon: Icons.visibility,
                   label: 'Pokémon vus',
-                  value: '0', // TODO: Implémenter le comptage
+                  value: '...', // TODO: Implémenter le comptage
                   color: Colors.blue,
                 ),
               ),
@@ -351,7 +394,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: _buildStatItem(
                   icon: Icons.favorite,
                   label: 'Favoris',
-                  value: '0', // TODO: Implémenter le comptage
+                  value: _isLoadingStats ? '...' : _favoritesCount.toString(),
                   color: Colors.red,
                 ),
               ),
@@ -389,10 +432,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -499,7 +539,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final result = await authService.updateProfile(
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
-      password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+      password: _passwordController.text.isNotEmpty
+          ? _passwordController.text
+          : null,
     );
 
     if (mounted) {
@@ -510,7 +552,9 @@ class _ProfilePageState extends State<ProfilePage> {
         });
         _showSuccessDialog('Profil mis à jour avec succès');
       } else {
-        _showErrorDialog(result.errorMessage ?? 'Erreur lors de la mise à jour');
+        _showErrorDialog(
+          result.errorMessage ?? 'Erreur lors de la mise à jour',
+        );
       }
     }
   }
@@ -573,7 +617,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _logout() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     await authService.logout();
-    
+
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),
