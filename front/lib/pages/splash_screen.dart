@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'login_page.dart';
+import '../widgets/auth_wrapper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen>
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const LoginPage(),
+                const AuthWrapper(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);
