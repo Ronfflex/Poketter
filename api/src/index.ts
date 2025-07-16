@@ -1,13 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-import express from 'express';
-import cors from 'cors';
-import { config } from 'dotenv';
+import { PrismaClient } from "@prisma/client";
+import cors from "cors";
+import { config } from "dotenv";
+import express from "express";
+import authRouter from "./routes/auth.router";
+import likeRouter from "./routes/like.router";
+import userRouter from "./routes/user.router";
+import vueRouter from "./routes/vue.router";
+import { isAuthenticated } from "./utils/middleware";
 
-// Charger les variables d'environnement
 config();
-
-import authRouter from './routes/auth.router';
-import userRouter from './routes/user.router';
 
 export const prisma = new PrismaClient();
 
@@ -15,8 +16,10 @@ export const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRouter);
-app.use('/api/user', userRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
+app.use("/api/like", isAuthenticated, likeRouter);
+app.use("/api/vue", isAuthenticated, vueRouter);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on http://localhost:${process.env.PORT}`);

@@ -12,7 +12,7 @@ RUN apt-get update -y && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 RUN bun install
 
 COPY . .
@@ -29,7 +29,7 @@ RUN apt-get update -y && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/bun.lockb ./
+COPY --from=builder /app/bun.lock ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
 

@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   postgresdb:
@@ -7,9 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin      # Remplacez par le nom d'utilisateur souhaité
-      POSTGRES_PASSWORD: adminpwd  # Remplacez par le mot de passe souhaité
-      POSTGRES_DB: db   # Remplacez par le nom de la base de données souhaité
+      POSTGRES_USER: admin # Remplacez par le nom d'utilisateur souhaité
+      POSTGRES_PASSWORD: adminpwd # Remplacez par le mot de passe souhaité
+      POSTGRES_DB: db # Remplacez par le nom de la base de données souhaité
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d db"]
       interval: 10s
@@ -19,7 +19,7 @@ services:
       - postgresql-auth-db:/var/lib/postgresql/data
 
   api:
-    build: 
+    build:
       context: .
     restart: always
     environment:
@@ -35,6 +35,5 @@ services:
 
 volumes:
   postgresql-auth-db:
-
 # Pour tester que la db fonctionne :
 # psql -h localhost -p 5432 -U admin -d db

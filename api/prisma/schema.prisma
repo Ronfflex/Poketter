@@ -19,6 +19,26 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   role      Role     @default(USER)
+  likes     Like[]
+  vues      Vue[]
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  pokemonId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model Vue {
+  id        Int      @id @default(autoincrement())
+  pokemonId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int
 }
 
 enum Role {
